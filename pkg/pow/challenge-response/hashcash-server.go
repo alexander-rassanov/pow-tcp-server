@@ -1,4 +1,4 @@
-package wordwisdom
+package challenge_response
 
 import (
 	"context"
@@ -13,6 +13,15 @@ import (
 	"alexander.rassanov/pow-tcp-server/pkg/protocol"
 )
 
+// All possible headers can be used during Client <-> Server interactions.
+const (
+	RequestChallenge = iota
+	ResponseChallenge
+	RequestService
+	ResponseService
+	Quit
+)
+
 // ClientExpiration indicates how soon data of a client will be expired.
 const ClientExpiration = time.Hour * 24 * 2
 
@@ -21,6 +30,9 @@ const HashExpiration = time.Hour * 24 * 365 * 10
 
 // RandomForHashCash is used to init a hashCash.
 const RandomForHashCash = 10000
+
+// Service represents a functions that should be invoked when a service can be accessed.
+type Service func() interface{}
 
 // ErrBadRequest is used when a request is bad or received unexpected format.
 var ErrBadRequest = errors.New("bad request")
@@ -37,19 +49,26 @@ var ErrRequestExpired = errors.New("request is expired")
 // StreamWithHashCash represents a structure to provide word of wisdom to a stream.
 // It uses hash cash as a protection of spam requests.
 type StreamWithHashCash struct {
-	cache     cache.Cache
-	stream    io.ReadWriter
-	clientID  string
+	// cache is used to store necessary information for hash cash algorithm.
+	cache cache.Cache
+	// stream is used to exchange protocol data.
+	stream io.ReadWriter
+	// clientID is a client id.
+	clientID string
+	// zeroCount represents the complexity of hash cash challenge.
 	zeroCount int
+	// service is a function that will return any value that will be sent to clients.
+	service Service
 }
 
 // NewStreamWithHashCash returns a new StreamWithHashCash.
-func NewStreamWithHashCash(cache cache.Cache, clientID string, zeroCount int, stream io.ReadWriter) StreamWithHashCash {
+func NewStreamWithHashCash(cache cache.Cache, clientID string, zeroCount int, stream io.ReadWriter, service Service) StreamWithHashCash {
 	return StreamWithHashCash{
 		cache:     cache,
 		clientID:  clientID,
 		zeroCount: zeroCount,
 		stream:    stream,
+		service:   service,
 	}
 }
 
@@ -60,7 +79,7 @@ func (ww StreamWithHashCash) handleRequestChallenge() protocol.Message {
 	// ClientExpiration window compensates for clock skew and network routing time between different systems.
 	ww.cache.Set(key, random, ClientExpiration)
 	challenge := pow.NewHashCashDataChallenge(ww.clientID, ww.zeroCount, random)
-	return protocol.NewMessage(pow.ResponseChallenge, challenge)
+	return protocol.NewMessage(ResponseChallenge, challenge)
 }
 
 // handleRequestChallenge handles request service step.
@@ -82,18 +101,18 @@ func (ww StreamWithHashCash) handleRequestService(m protocol.Message) (protocol.
 		return protocol.Message{}, ErrHashAlreadyExist
 	}
 	ww.cache.Set(hc.Sha1Hash(), "", HashExpiration)
-	return protocol.NewMessage(pow.ResponseService, getRandQuote()), nil
+	return protocol.NewMessage(ResponseService, ww.service()), nil
 }
 
 // ProcessMessage proceeds a message of a hash cash protocol.
 func (ww StreamWithHashCash) ProcessMessage(m protocol.Message) (protocol.Message, error) {
 	switch m.Header {
-	case pow.RequestChallenge:
+	case RequestChallenge:
 		m := ww.handleRequestChallenge()
 		return m, nil
-	case pow.RequestService:
+	case RequestService:
 		return ww.handleRequestService(m)
-	case pow.Quit:
+	case Quit:
 		return protocol.Message{}, nil
 	default:
 		return protocol.Message{}, ErrBadRequest

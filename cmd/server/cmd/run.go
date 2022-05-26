@@ -7,6 +7,7 @@ package cmd
 import (
 	"alexander.rassanov/pow-tcp-server/pkg/cache"
 	"alexander.rassanov/pow-tcp-server/pkg/pow"
+	"alexander.rassanov/pow-tcp-server/pkg/pow/challenge-response"
 	"alexander.rassanov/pow-tcp-server/pkg/protocol"
 	"alexander.rassanov/pow-tcp-server/pkg/wordwisdom"
 	"context"
@@ -66,7 +67,7 @@ to quickly create a Cobra application.`,
 
 func handleIncomingRequest(ctx context.Context, conn net.Conn, cache cache.Cache) {
 	defer conn.Close()
-	wordWisdomStream := wordwisdom.NewStreamWithHashCash(cache, conn.RemoteAddr().String(), 1, conn)
+	wordWisdomStream := challenge_response.NewStreamWithHashCash(cache, conn.RemoteAddr().String(), 1, conn, wordwisdom.GetRandQuote)
 	if err := wordWisdomStream.ProcessStream(ctx); err != nil {
 		log.Printf("%s - error: %s", conn.RemoteAddr().String(), err.Error())
 	}

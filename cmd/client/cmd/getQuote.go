@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"alexander.rassanov/pow-tcp-server/pkg/pow"
+	challenge_response "alexander.rassanov/pow-tcp-server/pkg/pow/challenge-response"
 	"alexander.rassanov/pow-tcp-server/pkg/protocol"
 	"fmt"
 	"github.com/spf13/cobra"
@@ -35,35 +36,15 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			return err
 		}
-		err = protocol.SendPackage(protocol.NewMessage(pow.RequestChallenge, ""), conn)
+		data, err := challenge_response.GetServiceByStream(conn)
 		if err != nil {
 			return err
 		}
-		m, err := protocol.ReadPackage(conn)
-		if err != nil {
-			return err
-		}
-		hd, ok := m.Payload.(pow.HashCashData)
-		if !ok {
+		if quote, ok := data.(string); !ok {
 			return protocol.ErrBadPayload
+		} else {
+			fmt.Println("Received quote:", quote)
 		}
-		resolvedhd, err := hd.Resolve()
-		if err != nil {
-			return err
-		}
-		err = protocol.SendPackage(protocol.NewMessage(pow.RequestService, resolvedhd), conn)
-		if err != nil {
-			return err
-		}
-		m, err = protocol.ReadPackage(conn)
-		if err != nil {
-			return err
-		}
-		quote, ok := m.Payload.(string)
-		if !ok {
-			return protocol.ErrBadPayload
-		}
-		fmt.Println(quote)
 		return nil
 	},
 }

@@ -11,8 +11,8 @@ var quotes = []string{
 	"Others see in the word of wisdom a teaching function.",
 }
 
-// getRandQuote returns a random quote.
+// GetRandQuote returns a random quote.
 // quotes must not be empty otherwise panic will be generated.
-func getRandQuote() string {
+func GetRandQuote() interface{} {
 	return quotes[rand.Intn(len(quotes))]
 }

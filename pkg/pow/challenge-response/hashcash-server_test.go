@@ -1,9 +1,10 @@
-package wordwisdom
+package challenge_response
 
 import (
 	"alexander.rassanov/pow-tcp-server/pkg/cache"
 	"alexander.rassanov/pow-tcp-server/pkg/pow"
 	"alexander.rassanov/pow-tcp-server/pkg/protocol"
+	"alexander.rassanov/pow-tcp-server/pkg/wordwisdom"
 	cache2 "github.com/patrickmn/go-cache"
 	"io"
 	"math/rand"
@@ -42,11 +43,11 @@ func TestStream_ProcessMessage(t *testing.T) {
 					1,
 				},
 				args{protocol.Message{
-					Header:  pow.RequestChallenge,
+					Header:  RequestChallenge,
 					Payload: "",
 				}},
 				protocol.Message{
-					Header:  pow.ResponseChallenge,
+					Header:  ResponseChallenge,
 					Payload: pow.NewHashCashDataChallenge("localhost", 1, rand.Intn(RandomForHashCash)),
 				},
 				false,
@@ -63,11 +64,11 @@ func TestStream_ProcessMessage(t *testing.T) {
 					1,
 				},
 				args{protocol.Message{
-					Header:  pow.RequestService,
+					Header:  RequestService,
 					Payload: resolvedHash,
 				}},
 				protocol.Message{
-					Header:  pow.ResponseService,
+					Header:  ResponseService,
 					Payload: "Others see in the word of wisdom a teaching function.",
 				},
 				false,
@@ -83,6 +84,7 @@ func TestStream_ProcessMessage(t *testing.T) {
 				stream:    tt.fields.stream,
 				clientID:  tt.fields.clientID,
 				zeroCount: tt.fields.zeroCount,
+				service:   Service(wordwisdom.GetRandQuote),
 			}
 			got, err := ww.ProcessMessage(tt.args.m)
 

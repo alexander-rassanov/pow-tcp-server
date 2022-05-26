@@ -17,15 +17,6 @@ var ErrLimitExceeded = errors.New("limit exceeded")
 // It is used to prevent infinite loops.
 const ComputationLimit = 1000
 
-// All possible headers can be used during Client <-> Server interactions.
-const (
-	RequestChallenge = iota
-	ResponseChallenge
-	RequestService
-	ResponseService
-	Quit
-)
-
 // TimeLayout represents layout for HashCashData which is should be YYMMDD[hhmm[ss]].
 const TimeLayout = "060102"
 
@@ -86,7 +77,8 @@ func (h HashCashData) Sha1Hash() string {
 // IsCorrect returns true if hash cash data is resolved.
 func (h HashCashData) IsCorrect() bool {
 	if h.Bits == 0 {
-		// what to do?
+		// what to do here?
+		return true
 	}
 	hash := h.Sha1Hash()
 	if len(hash) < h.Bits {

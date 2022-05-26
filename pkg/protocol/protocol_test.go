@@ -14,13 +14,13 @@ func TestNewMessage(t *testing.T) {
 	type MyPayload struct {
 		Message int
 	}
-	m := &Message{
+	m := Message{
 		RequestService, MyPayload{256},
 	}
 	tests := []struct {
 		name string
 		args args
-		want *Message
+		want Message
 	}{
 		{
 			"Get fullfiled message structure",
@@ -44,7 +44,7 @@ func TestMessage_Encode(t *testing.T) {
 		Header  MessageHeader
 		Payload interface{}
 	}
-	type MyPayload struct {}
+	type MyPayload struct{}
 	tests := []struct {
 		name   string
 		fields fields
@@ -55,7 +55,7 @@ func TestMessage_Encode(t *testing.T) {
 			fields{
 				RequestService, MyPayload{},
 			},
-			[]byte{44 ,255 ,129 ,3 ,1 ,1 ,7 ,77 ,101 ,115 ,115 ,97 ,103 ,101 ,1 ,255 ,130 ,0 ,1 ,2 ,1 ,6 ,72 ,101 ,97 ,100 ,101 ,114 ,1 ,4 ,0 ,1 ,7 ,80 ,97 ,121 ,108 ,111 ,97 ,100 ,1 ,16 ,0 ,0 ,0},
+			[]byte{44, 255, 129, 3, 1, 1, 7, 77, 101, 115, 115, 97, 103, 101, 1, 255, 130, 0, 1, 2, 1, 6, 72, 101, 97, 100, 101, 114, 1, 4, 0, 1, 7, 80, 97, 121, 108, 111, 97, 100, 1, 16, 0, 0, 0},
 		},
 	}
 	for _, tt := range tests {
@@ -78,7 +78,7 @@ func TestParseMessage(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *Message
+		want    Message
 		wantErr bool
 	}{
 		{
@@ -88,12 +88,12 @@ func TestParseMessage(t *testing.T) {
 			},
 			NewMessage(RequestService, "my awesome service"),
 			false,
-		},{
+		}, {
 			"trying to decode bad encoded message",
 			args{
 				[]byte("Hello worlds"),
 			},
-			NewMessage(0, ""),
+			NewMessage(0, nil),
 			true,
 		},
 	}

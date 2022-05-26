@@ -38,13 +38,14 @@ type HashCashData struct {
 }
 
 // NewHashCashDataChallenge returns a new challenge based on HashCashData algorithm.
-func NewHashCashDataChallenge(resource string, zeroCount int, random int) *HashCashData {
-	return &HashCashData{
-		Ver:     1,
-		Bits:    zeroCount,
-		Date:    getHashCashDate(),
-		Rand:    random,
-		Counter: rand.Intn(100),
+func NewHashCashDataChallenge(resource string, zeroCount int, random int) HashCashData {
+	return HashCashData{
+		Ver:      1,
+		Bits:     zeroCount,
+		Date:     getHashCashDate(),
+		Rand:     random,
+		Resource: resource,
+		Counter:  rand.Intn(100),
 	}
 }
 
@@ -64,28 +65,12 @@ func (h HashCashData) ToString() string {
 	)
 }
 
-// sha1Hash calculates sha1 for HashcahData.
+// Sha1Hash calculates sha1 for HashcahData.
 func (h HashCashData) Sha1Hash() string {
 	sha1 := sha1.New()
 	sha1.Write([]byte(h.ToString()))
 	bs := sha1.Sum(nil)
 	return fmt.Sprintf("%x", bs)
-}
-
-// isHashCorrect returns true when hash is correct otherwise false.
-func isHashCorrect(hash string, zeroCount int) bool {
-	if zeroCount == 0 {
-		// what to do?
-	}
-	if len(hash) < zeroCount {
-		return false
-	}
-	for _, ch := range hash[:zeroCount] {
-		if ch != '0' {
-			return false
-		}
-	}
-	return true
 }
 
 func (h HashCashData) IsCorrect() bool {

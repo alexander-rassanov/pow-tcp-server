@@ -3,9 +3,13 @@ package protocol
 import (
 	"bytes"
 	"encoding/gob"
+	"errors"
+	"fmt"
 )
 
 type MessageHeader int
+
+var ErrBadPayload = errors.New("bad payload")
 
 const (
 	RequestChallenge MessageHeader = iota
@@ -20,31 +24,30 @@ type Message struct {
 	Payload interface{}
 }
 
-func NewMessage(h MessageHeader, p interface{}) *Message {
-	return &Message{
+func NewMessage(h MessageHeader, p interface{}) Message {
+	return Message{
 		h, p,
 	}
 }
 
-// Encode encodes Message struct to bytes that can be send via Network.
+// Encode encodes Message struct to bytes that can be sent via Network.
 // It uses Gob as an encoder. Read https://go.dev/blog/gob.
 func (m Message) Encode() []byte {
+	gob.Register(&Message{})
 	var ret bytes.Buffer
 	enc := gob.NewEncoder(&ret)
-	enc.Encode(m)
+	if err := enc.Encode(&m); err != nil {
+		fmt.Println(err)
+	}
 	return ret.Bytes()
 }
 
-// Encode decodes bytes to the Message struct.
+// ParseMessage decodes bytes to the Message struct.
 // It uses Gob as an encoder. Read https://go.dev/blog/gob.
-func ParseMessage(m []byte) (*Message, error) {
-	var ret bytes.Buffer
-	_, err := ret.Write(m)
-	if err != nil {
-		return nil, err
-	}
-	enc := gob.NewDecoder(&ret)
-	message := &Message{}
-	err = enc.Decode(message)
+func ParseMessage(m []byte) (Message, error) {
+	inputBuffered := bytes.NewBuffer(m)
+	enc := gob.NewDecoder(inputBuffered)
+	message := Message{}
+	err := enc.Decode(&message)
 	return message, err
 }

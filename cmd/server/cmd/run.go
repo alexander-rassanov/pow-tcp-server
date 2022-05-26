@@ -6,6 +6,8 @@ package cmd
 
 import (
 	"alexander.rassanov/pow-tcp-server/pkg/cache"
+	"alexander.rassanov/pow-tcp-server/pkg/pow"
+	"alexander.rassanov/pow-tcp-server/pkg/protocol"
 	"alexander.rassanov/pow-tcp-server/pkg/wordwisdom"
 	"context"
 	"fmt"
@@ -32,6 +34,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		protocol.RegisterType(pow.HashCashData{})
 		host, err := cmd.Flags().GetString("host")
 		if err != nil {
 			return err

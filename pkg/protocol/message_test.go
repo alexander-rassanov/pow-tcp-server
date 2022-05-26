@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"alexander.rassanov/pow-tcp-server/pkg/pow"
 	"reflect"
 	"testing"
 )
@@ -15,7 +16,7 @@ func TestNewMessage(t *testing.T) {
 		Message int
 	}
 	m := Message{
-		RequestService, MyPayload{256},
+		pow.RequestService, MyPayload{256},
 	}
 	tests := []struct {
 		name string
@@ -25,7 +26,7 @@ func TestNewMessage(t *testing.T) {
 		{
 			"Get fullfiled message structure",
 			args{
-				RequestService, MyPayload{256},
+				pow.RequestService, MyPayload{256},
 			},
 			m,
 		},
@@ -53,7 +54,7 @@ func TestMessage_Encode(t *testing.T) {
 		{
 			"when Message is fullfiled",
 			fields{
-				RequestService, MyPayload{},
+				pow.RequestService, MyPayload{},
 			},
 			[]byte{44, 255, 129, 3, 1, 1, 7, 77, 101, 115, 115, 97, 103, 101, 1, 255, 130, 0, 1, 2, 1, 6, 72, 101, 97, 100, 101, 114, 1, 4, 0, 1, 7, 80, 97, 121, 108, 111, 97, 100, 1, 16, 0, 0, 0},
 		},
@@ -64,7 +65,7 @@ func TestMessage_Encode(t *testing.T) {
 				Header:  tt.fields.Header,
 				Payload: tt.fields.Payload,
 			}
-			if got := m.Encode(); !reflect.DeepEqual(got, tt.want) {
+			if got, _ := m.Encode(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Message.Encode() = %v, want %v", got, tt.want)
 			}
 		})
@@ -75,6 +76,7 @@ func TestParseMessage(t *testing.T) {
 	type args struct {
 		m []byte
 	}
+	encodedProperMessage, _ := NewMessage(pow.RequestService, "my awesome service").Encode()
 	tests := []struct {
 		name    string
 		args    args
@@ -84,9 +86,9 @@ func TestParseMessage(t *testing.T) {
 		{
 			"trying to decode encoded message",
 			args{
-				NewMessage(RequestService, "my awesome service").Encode(),
+				encodedProperMessage,
 			},
-			NewMessage(RequestService, "my awesome service"),
+			NewMessage(pow.RequestService, "my awesome service"),
 			false,
 		}, {
 			"trying to decode bad encoded message",

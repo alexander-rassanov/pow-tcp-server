@@ -42,11 +42,11 @@ func TestStream_ProcessMessage(t *testing.T) {
 					1,
 				},
 				args{protocol.Message{
-					Header:  protocol.RequestChallenge,
+					Header:  pow.RequestChallenge,
 					Payload: "",
 				}},
 				protocol.Message{
-					Header:  protocol.ResponseChallenge,
+					Header:  pow.ResponseChallenge,
 					Payload: pow.NewHashCashDataChallenge("localhost", 1, rand.Intn(RandomForHashCash)),
 				},
 				false,
@@ -63,11 +63,11 @@ func TestStream_ProcessMessage(t *testing.T) {
 					1,
 				},
 				args{protocol.Message{
-					Header:  protocol.RequestService,
+					Header:  pow.RequestService,
 					Payload: resolvedHash,
 				}},
 				protocol.Message{
-					Header:  protocol.ResponseService,
+					Header:  pow.ResponseService,
 					Payload: "Others see in the word of wisdom a teaching function.",
 				},
 				false,

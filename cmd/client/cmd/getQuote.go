@@ -1,17 +1,13 @@
 /*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
+Copyright © 2022 Alex Rassanov <alexander.rassanov@gmail.com>
 */
 package cmd
 
 import (
 	"alexander.rassanov/pow-tcp-server/pkg/pow"
 	"alexander.rassanov/pow-tcp-server/pkg/protocol"
-	"bufio"
-	"encoding/gob"
 	"fmt"
 	"github.com/spf13/cobra"
-	"log"
 	"net"
 )
 
@@ -26,7 +22,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		gob.Register(pow.HashCashData{})
+		protocol.RegisterType(pow.HashCashData{})
 		host, err := cmd.Flags().GetString("host")
 		if err != nil {
 			return err
@@ -39,20 +35,11 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			return err
 		}
-
-		_, err = conn.Write(protocol.NewMessage(protocol.RequestChallenge, "").Encode())
+		err = protocol.SendPackage(protocol.NewMessage(pow.RequestChallenge, ""), conn)
 		if err != nil {
 			return err
 		}
-		conn.Write([]byte{'\n'})
-		connReader := bufio.NewReader(conn)
-		b, err := connReader.ReadBytes('\n')
-		if err != nil {
-			return err
-		}
-		log.Printf("received bytes %v", b)
-		m, err := protocol.ParseMessage(b)
-		fmt.Println("Parse", m, err)
+		m, err := protocol.ReadPackage(conn)
 		if err != nil {
 			return err
 		}
@@ -61,22 +48,14 @@ to quickly create a Cobra application.`,
 			return protocol.ErrBadPayload
 		}
 		resolvedhd, err := hd.Resolve()
-		log.Printf("resolved %v", resolvedhd)
 		if err != nil {
 			return err
 		}
-		_, err = conn.Write(protocol.NewMessage(protocol.RequestService, resolvedhd).Encode())
-		conn.Write([]byte{'\n'})
-		log.Printf("to server hash %v", resolvedhd)
+		err = protocol.SendPackage(protocol.NewMessage(pow.RequestService, resolvedhd), conn)
 		if err != nil {
 			return err
 		}
-		bytes, err := connReader.ReadBytes('\n')
-		log.Printf("from requestServer %x", bytes)
-		if err != nil {
-			return err
-		}
-		m, err = protocol.ParseMessage(bytes)
+		m, err = protocol.ReadPackage(conn)
 		if err != nil {
 			return err
 		}

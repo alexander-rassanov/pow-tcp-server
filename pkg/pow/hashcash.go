@@ -17,13 +17,22 @@ var ErrLimitExceeded = errors.New("limit exceeded")
 // It is used to prevent infinite loops.
 const ComputationLimit = 1000
 
+// All possible headers can be used during Client <-> Server interactions.
+const (
+	RequestChallenge = iota
+	ResponseChallenge
+	RequestService
+	ResponseService
+	Quit
+)
+
 // TimeLayout represents layout for HashCashData which is should be YYMMDD[hhmm[ss]].
 const TimeLayout = "060102"
 
 // HashCashData represents the structure to compute challenges.
 // See https://en.wikipedia.org/wiki/Hashcash.
 type HashCashData struct {
-	// Hashcash format version, 1 (which supersedes version 0).
+	// HashCash format version, 1 (which supersedes version 0).
 	Ver int
 	// Number of "partial pre-image" (zero) bits in the hashed code.
 	Bits int
@@ -49,6 +58,7 @@ func NewHashCashDataChallenge(resource string, zeroCount int, random int) HashCa
 	}
 }
 
+// getHashCashDate returns current time with valid time format.
 func getHashCashDate() string {
 	return time.Now().Format(TimeLayout)
 }
@@ -67,12 +77,13 @@ func (h HashCashData) ToString() string {
 
 // Sha1Hash calculates sha1 for HashcahData.
 func (h HashCashData) Sha1Hash() string {
-	sha1 := sha1.New()
-	sha1.Write([]byte(h.ToString()))
-	bs := sha1.Sum(nil)
+	checksum := sha1.New()
+	checksum.Write([]byte(h.ToString()))
+	bs := checksum.Sum(nil)
 	return fmt.Sprintf("%x", bs)
 }
 
+// IsCorrect returns true if hash cash data is resolved.
 func (h HashCashData) IsCorrect() bool {
 	if h.Bits == 0 {
 		// what to do?
@@ -89,7 +100,7 @@ func (h HashCashData) IsCorrect() bool {
 	return true
 }
 
-// Resolve calculates correct hashcash.
+// Resolve calculates correct hashCash.
 func (h HashCashData) Resolve() (HashCashData, error) {
 	for i := 0; i < ComputationLimit; i, h.Counter = i+1, h.Counter+1 {
 		if h.IsCorrect() {

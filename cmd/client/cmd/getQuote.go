@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"alexander.rassanov/pow-tcp-server/pkg/pow"
-	challenge_response "alexander.rassanov/pow-tcp-server/pkg/pow/challenge-response"
 	"alexander.rassanov/pow-tcp-server/pkg/protocol"
 	"fmt"
 	"github.com/spf13/cobra"
@@ -36,7 +35,7 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			return err
 		}
-		data, err := challenge_response.GetServiceByStream(conn)
+		data, err := pow.GetServiceByStream(conn)
 		if err != nil {
 			return err
 		}

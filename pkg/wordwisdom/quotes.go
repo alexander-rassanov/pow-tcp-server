@@ -13,6 +13,6 @@ var quotes = []string{
 
 // GetRandQuote returns a random quote.
 // quotes must not be empty otherwise panic will be generated.
-func GetRandQuote() interface{} {
+func GetRandQuote() string {
 	return quotes[rand.Intn(len(quotes))]
 }

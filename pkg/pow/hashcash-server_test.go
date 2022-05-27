@@ -1,10 +1,8 @@
-package challenge_response
+package pow
 
 import (
 	"alexander.rassanov/pow-tcp-server/pkg/cache"
-	"alexander.rassanov/pow-tcp-server/pkg/pow"
 	"alexander.rassanov/pow-tcp-server/pkg/protocol"
-	"alexander.rassanov/pow-tcp-server/pkg/wordwisdom"
 	cache2 "github.com/patrickmn/go-cache"
 	"io"
 	"math/rand"
@@ -48,13 +46,13 @@ func TestStream_ProcessMessage(t *testing.T) {
 				}},
 				protocol.Message{
 					Header:  ResponseChallenge,
-					Payload: pow.NewHashCashDataChallenge("localhost", 1, rand.Intn(RandomForHashCash)),
+					Payload: NewHashCashDataChallenge("localhost", 1, rand.Intn(RandomForHashCash)),
 				},
 				false,
 			}
 		}, func() testStruct {
 			rand.Seed(1)
-			resolvedHash, _ := pow.NewHashCashDataChallenge("localhost", 1, rand.Intn(RandomForHashCash)).Resolve()
+			resolvedHash, _ := NewHashCashDataChallenge("localhost", 1, rand.Intn(RandomForHashCash)).Resolve()
 			return testStruct{
 				"Send Request challenge with solved challenge and expect to receive a random quote",
 				fields{
@@ -69,7 +67,7 @@ func TestStream_ProcessMessage(t *testing.T) {
 				}},
 				protocol.Message{
 					Header:  ResponseService,
-					Payload: "Others see in the word of wisdom a teaching function.",
+					Payload: "Hello World",
 				},
 				false,
 			}
@@ -84,7 +82,7 @@ func TestStream_ProcessMessage(t *testing.T) {
 				stream:    tt.fields.stream,
 				clientID:  tt.fields.clientID,
 				zeroCount: tt.fields.zeroCount,
-				service:   Service(wordwisdom.GetRandQuote),
+				service:   func() interface{} { return "Hello World" },
 			}
 			got, err := ww.ProcessMessage(tt.args.m)
 

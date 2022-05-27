@@ -1,16 +1,14 @@
-package challenge_response
+package pow
 
 import (
+	"alexander.rassanov/pow-tcp-server/pkg/cache"
+	"alexander.rassanov/pow-tcp-server/pkg/protocol"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"math/rand"
 	"time"
-
-	"alexander.rassanov/pow-tcp-server/pkg/cache"
-	"alexander.rassanov/pow-tcp-server/pkg/pow"
-	"alexander.rassanov/pow-tcp-server/pkg/protocol"
 )
 
 // All possible headers can be used during Client <-> Server interactions.
@@ -37,6 +35,9 @@ type Service func() interface{}
 // ErrBadRequest is used when a request is bad or received unexpected format.
 var ErrBadRequest = errors.New("bad request")
 
+// ErrBadResponse is used when a request is bad or received unexpected format.
+var ErrBadResponse = errors.New("bad response")
+
 // ErrHashAlreadyExist hash is already exist and cannot be used for the verification.
 var ErrHashAlreadyExist = errors.New("hash is already exist")
 
@@ -46,7 +47,7 @@ var ErrBadHash = errors.New("bad hash")
 // ErrRequestExpired the request cannot be served any more due to expiration.
 var ErrRequestExpired = errors.New("request is expired")
 
-// StreamWithHashCash represents a structure to provide word of wisdom to a stream.
+// StreamWithHashCash represents a structure to provide any services that is protected by HashCash.
 // It uses hash cash as a protection of spam requests.
 type StreamWithHashCash struct {
 	// cache is used to store necessary information for hash cash algorithm.
@@ -78,13 +79,13 @@ func (ww StreamWithHashCash) handleRequestChallenge() protocol.Message {
 	key := fmt.Sprintf("%s:%d", ww.clientID, random)
 	// ClientExpiration window compensates for clock skew and network routing time between different systems.
 	ww.cache.Set(key, random, ClientExpiration)
-	challenge := pow.NewHashCashDataChallenge(ww.clientID, ww.zeroCount, random)
+	challenge := NewHashCashDataChallenge(ww.clientID, ww.zeroCount, random)
 	return protocol.NewMessage(ResponseChallenge, challenge)
 }
 
 // handleRequestChallenge handles request service step.
 func (ww StreamWithHashCash) handleRequestService(m protocol.Message) (protocol.Message, error) {
-	hc, ok := m.Payload.(pow.HashCashData)
+	hc, ok := m.Payload.(HashCashData)
 	if !ok {
 		return protocol.Message{}, ErrBadRequest
 	}
@@ -138,6 +139,9 @@ func (ww StreamWithHashCash) ProcessStream(ctx context.Context) error {
 		}
 		if err := protocol.SendPackage(mOut, ww.stream); err != nil {
 			return err
+		}
+		if mOut.Header == ResponseService {
+			return nil
 		}
 	}
 }

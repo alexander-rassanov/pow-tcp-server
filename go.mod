@@ -1,6 +1,6 @@
 module alexander.rassanov/pow-tcp-server
 
-go 1.17
+go 1.18
 
 require (
 	github.com/DarthPestilane/easytcp v0.2.0 // indirect

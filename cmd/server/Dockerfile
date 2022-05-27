@@ -12,6 +12,6 @@ WORKDIR /
 
 COPY --from=build /app /app
 
-USER nonroot:nonroot
+USER 1000
 
 ENTRYPOINT ["/app"]

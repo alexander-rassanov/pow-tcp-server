@@ -17,7 +17,7 @@ var ErrLimitExceeded = errors.New("limit exceeded")
 // It is used to prevent infinite loops.
 const ComputationLimit = 1000
 
-// TimeLayout represents layout for HashCashData which is should be YYMMDD[hhmm[ss]].
+// TimeLayout represents layout for HashCashData which should be YYMMDD[hhmm[ss]].
 const TimeLayout = "060102"
 
 // HashCashData represents the structure to compute challenges.
@@ -66,7 +66,7 @@ func (h HashCashData) ToString() string {
 	)
 }
 
-// Sha1Hash calculates sha1 for HashcahData.
+// Sha1Hash calculates sha1 for HashCashData.
 func (h HashCashData) Sha1Hash() string {
 	checksum := sha1.New()
 	checksum.Write([]byte(h.ToString()))

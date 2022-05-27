@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
+Copyright © 2022 Alexander Rassanov <alexander.rassanov@gmail.com>
 
 */
 package cmd
@@ -7,7 +7,6 @@ package cmd
 import (
 	"alexander.rassanov/pow-tcp-server/pkg/cache"
 	"alexander.rassanov/pow-tcp-server/pkg/pow"
-	"alexander.rassanov/pow-tcp-server/pkg/pow/challenge-response"
 	"alexander.rassanov/pow-tcp-server/pkg/protocol"
 	"alexander.rassanov/pow-tcp-server/pkg/wordwisdom"
 	"context"
@@ -18,11 +17,11 @@ import (
 	"net"
 )
 
-// BuffSize contains how much bytes messages can contain.
+// BuffSize contains how many bytes messages can contain.
 const BuffSize = 1024
 
-// ZeroCount represents diffucilty of the required challenges.
-const ZeroCount = 20
+// ZeroCount represents difficulty of the required challenges.
+const ZeroCount = 1
 
 // runCmd represents the run command.
 var runCmd = &cobra.Command{
@@ -49,12 +48,12 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			return err
 		}
-		log.Printf("start server: %s", address)
+		log.Printf("start server on %s", address)
 		localCache := cache2.New(cache2.NoExpiration, cache2.NoExpiration)
 		ctx := context.Background()
 		for {
 			conn, err := listener.Accept()
-			log.Printf("accept connection %s", conn.RemoteAddr().String())
+			log.Printf("%s: accept connection", conn.RemoteAddr().String())
 			if err != nil {
 				return err
 			}
@@ -65,11 +64,17 @@ to quickly create a Cobra application.`,
 	},
 }
 
+func quoteService() interface{} {
+	return wordwisdom.GetRandQuote()
+}
+
 func handleIncomingRequest(ctx context.Context, conn net.Conn, cache cache.Cache) {
 	defer conn.Close()
-	wordWisdomStream := challenge_response.NewStreamWithHashCash(cache, conn.RemoteAddr().String(), 1, conn, wordwisdom.GetRandQuote)
+	wordWisdomStream := pow.NewStreamWithHashCash(cache, conn.RemoteAddr().String(), ZeroCount, conn, quoteService)
 	if err := wordWisdomStream.ProcessStream(ctx); err != nil {
-		log.Printf("%s - error: %s", conn.RemoteAddr().String(), err.Error())
+		log.Printf("%s: error: %s", conn.RemoteAddr().String(), err.Error())
+	} else {
+		log.Printf("%s: service provided", conn.RemoteAddr().String())
 	}
 }
 
